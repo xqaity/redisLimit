@@ -30,22 +30,22 @@ import java.util.List;
 public class RateLimiterAspect {
 	private static final Logger log = LoggerFactory.getLogger(RateLimiterAspect.class);
 
-	@Autowired
+	@Autowired(required=true)
 	private RedisTemplate<Object, Object> redisTemplate;
 
-	@Autowired
+	@Autowired(required=true)
 	private RedisScript<Long> limitScript;
 
-	@Before("@annotation(rateLimiter)")
+	@Before("@annotation(rateLimiter)") //前置通知, 在方法执行之前执行之前扫描注解
 	public void doBefore(JoinPoint point, RateLimiter rateLimiter) throws Throwable {
-		String key = rateLimiter.key();
-		int time = rateLimiter.time();
-		int count = rateLimiter.count();
+		String key = rateLimiter.key(); //key
+		int time = rateLimiter.time();// 每各多少秒的步长
+		int count = rateLimiter.count();//步长次数
 
-		String combineKey = getCombineKey(rateLimiter, point);
-		List<Object> keys = Collections.singletonList(combineKey);
+		String combineKey = getCombineKey(rateLimiter, point); //如果有ip 拿到key获取一个组合的 key，所谓的组合的 key，就是在注解的 key 属性基础上，再加上方法的完整路径，如果是 IP 模式的话，就再加上 IP 地址。以 IP 模式为例，最终生成的 key 类似这样
+		List<Object> keys = Collections.singletonList(combineKey); //变为keyList
 		try {
-			Long number = redisTemplate.execute(limitScript, keys, count, time);
+			Long number = redisTemplate.execute(limitScript, keys, count, time); //执行lua脚本
 			if (number==null || number.intValue() > count) {
 				throw new ServiceException("访问过于频繁，请稍候再试");
 			}

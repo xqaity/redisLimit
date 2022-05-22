@@ -20,5 +20,12 @@ public class GlobalException {
 		map.put("message", e.getMessage());
 		return map;
 	}
+	@ExceptionHandler(RuntimeException.class)
+	public Map<String,Object> runtimeException(RuntimeException e) {
+		HashMap<String, Object> map = new HashMap<>();
+		map.put("status", 501);
+		map.put("message", e.getMessage());
+		return map;
+	}
 }
 
